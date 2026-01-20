@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>120 分鐘美味雷達 🍜</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Maps API with Places Library -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA-W47DliyOJbMn9NXfFQbzMJ39yVWjz-c&libraries=places"></script>
+    <style>
+        /* 自訂樣式 - 讓搜尋框與 Google Places Autocomplete 整合更好看 */
+        .pac-container {
+            border-radius: 0.5rem;
+            margin-top: 0.25rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 星星圖示 */
+        .star {
+            color: #f59e0b;
+        }
+        
+        /* Loading 動畫 */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        /* 平滑滾動 */
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-amber-50 to-orange-100 min-h-screen">
+    
+    <!-- 主容器 -->
+    <div class="container mx-auto px-4 py-6 md:py-10 max-w-7xl">
+        
+        <!-- 標題區域 -->
+        <header class="text-center mb-8 md:mb-12">
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-orange-600 mb-3">
+                🍜 飢餓食刻
+            </h1>
+        </header>
+
+        <!-- 搜尋控制區域 -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-8">
+            
+            <!-- Mobile: 垂直堆疊 / Desktop: 水平排列 -->
+            <div class="flex flex-col md:flex-row md:items-end gap-4 md:gap-6">
+                
+                <!-- 位置搜尋框 -->
+                <div class="flex-1">
+                    <label for="location-input" class="block text-sm font-semibold text-orange-900 mb-2">
+                        📍 請輸入地點
+                    </label>
+                    <input 
+                        type="text" 
+                        id="location-input" 
+                        placeholder="例如：台北 101" 
+                        class="w-full px-4 py-3 border-2 border-orange-300 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all"
+                    />
+                </div>
+
+                <!-- 最低評分滑桿 -->
+                <div class="flex-1">
+                    <label for="rating-slider" class="block text-sm font-semibold text-orange-900 mb-2">
+                        ⭐ 最低評分: <span id="rating-value" class="text-orange-600">4.0</span>
+                    </label>
+                    <input 
+                        type="range" 
+                        id="rating-slider" 
+                        min="0" 
+                        max="5" 
+                        step="0.5" 
+                        value="4.0" 
+                        class="w-full h-2 bg-orange-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                    />
+                </div>
+
+                <!-- 價格等級選擇 -->
+                <div class="flex-1">
+                    <label class="block text-sm font-semibold text-orange-900 mb-2">
+                        💰 價格等級
+                    </label>
+                    <div class="flex gap-2">
+                        <button class="price-btn flex-1 px-3 py-2 border-2 border-orange-300 rounded-lg text-orange-800 hover:bg-orange-100 transition-colors" data-price="1">$</button>
+                        <button class="price-btn flex-1 px-3 py-2 border-2 border-orange-300 rounded-lg text-orange-800 hover:bg-orange-100 transition-colors" data-price="2">$$</button>
+                        <button class="price-btn flex-1 px-3 py-2 border-2 border-orange-300 rounded-lg text-orange-800 hover:bg-orange-100 transition-colors" data-price="3">$$$</button>
+                        <button class="price-btn flex-1 px-3 py-2 border-2 border-orange-300 rounded-lg text-orange-800 hover:bg-orange-100 transition-colors" data-price="4">$$$$</button>
+                    </div>
+                </div>
+
+                <!-- 搜尋按鈕 -->
+                <div class="md:flex-none">
+                    <button 
+                        id="search-btn" 
+                        class="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded-lg shadow-lg hover:from-orange-600 hover:to-red-600 transform hover:scale-105 transition-all duration-200"
+                    >
+                        🔍 搜尋美食
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading 狀態 -->
+        <div id="loading" class="hidden text-center py-12">
+            <div class="inline-block w-16 h-16 border-4 border-orange-300 border-t-orange-600 rounded-full spinner"></div>
+            <p class="mt-4 text-orange-700 font-semibold">正在搜尋附近的美味餐廳...</p>
+        </div>
+
+        <!-- 錯誤訊息 -->
+        <div id="error-message" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6">
+            <p class="font-bold">⚠️ 發生錯誤</p>
+            <p id="error-text"></p>
+        </div>
+
+        <!-- 結果區域 -->
+        <div id="results" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- 動態生成的餐廳卡片將顯示在這裡 -->
+        </div>
+
+        <!-- 無結果提示 -->
+        <div id="no-results" class="hidden text-center py-12">
+            <div class="text-6xl mb-4">😢</div>
+            <p class="text-xl text-orange-700 font-semibold">抱歉，找不到符合條件的餐廳</p>
+            <p class="text-orange-600 mt-2">請嘗試調整搜尋條件或更換地點</p>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // 全域變數與狀態管理
+        // ============================================
+        
+        let autocomplete; // Google Places Autocomplete 實例
+        let selectedLocation = null; // 使用者選擇的位置
+        let selectedPriceLevels = [1, 2, 3, 4]; // 預設選擇所有價格等級
+        let map; // Google Map 實例（隱藏，僅用於服務）
+        let placesService; // Places Service 實例
+
+        // ============================================
+        // 初始化函式
+        // ============================================
+        
+        function init() {
+            // 初始化 Google Places Autocomplete
+            const input = document.getElementById('location-input');
+            autocomplete = new google.maps.places.Autocomplete(input, {
+                types: ['geocode', 'establishment']
+            });
+            
+            // 監聽地點選擇事件
+            autocomplete.addListener('place_changed', onPlaceChanged);
+            
+            // 初始化隱藏的地圖（用於 PlacesService）
+            map = new google.maps.Map(document.createElement('div'));
+            placesService = new google.maps.places.PlacesService(map);
+            
+            // 綁定評分滑桿事件
+            const ratingSlider = document.getElementById('rating-slider');
+            ratingSlider.addEventListener('input', (e) => {
+                document.getElementById('rating-value').textContent = e.target.value;
+            });
+            
+            // 綁定價格按鈕事件
+            const priceBtns = document.querySelectorAll('.price-btn');
+            priceBtns.forEach(btn => {
+                btn.addEventListener('click', togglePriceLevel);
+            });
+            
+            // 預設選中所有價格等級
+            priceBtns.forEach(btn => btn.classList.add('bg-orange-500', 'text-white', 'border-orange-500'));
+            
+            // 綁定搜尋按鈕事件
+            document.getElementById('search-btn').addEventListener('click', searchRestaurants);
+        }
+
+        // ============================================
+        // 地點選擇處理
+        // ============================================
+        
+        function onPlaceChanged() {
+            const place = autocomplete.getPlace();
+            if (!place.geometry || !place.geometry.location) {
+                showError('請選擇一個有效的地點');
+                return;
+            }
+            selectedLocation = {
+                lat: place.geometry.location.lat(),
+                lng: place.geometry.location.lng(),
+                name: place.name || place.formatted_address
+            };
+        }
+
+        // ============================================
+        // 價格等級切換
+        // ============================================
+        
+        function togglePriceLevel(e) {
+            const btn = e.target;
+            const price = parseInt(btn.dataset.price);
+            
+            if (btn.classList.contains('bg-orange-500')) {
+                // 取消選擇
+                btn.classList.remove('bg-orange-500', 'text-white', 'border-orange-500');
+                btn.classList.add('border-orange-300', 'text-orange-800');
+                selectedPriceLevels = selectedPriceLevels.filter(p => p !== price);
+            } else {
+                // 選擇
+                btn.classList.add('bg-orange-500', 'text-white', 'border-orange-500');
+                btn.classList.remove('border-orange-300', 'text-orange-800');
+                selectedPriceLevels.push(price);
+            }
+        }
+
+        // ============================================
+        // 主搜尋函式
+        // ============================================
+        
+        async function searchRestaurants() {
+            // 驗證輸入
+            if (!selectedLocation) {
+                showError('請先選擇一個地點');
+                return;
+            }
+            
+            if (selectedPriceLevels.length === 0) {
+                showError('請至少選擇一個價格等級');
+                return;
+            }
+            
+            // 取得最低評分
+            const minRating = parseFloat(document.getElementById('rating-slider').value);
+            
+            // 顯示 Loading 狀態
+            showLoading();
+            hideError();
+            clearResults();
+            
+            try {
+                // 步驟 1: 使用 nearbySearch 搜尋餐廳
+                const nearbyResults = await searchNearbyRestaurants(selectedLocation, minRating);
+                
+                // 步驟 2: 過濾價格等級
+                const filteredByPrice = nearbyResults.filter(place => 
+                    !place.price_level || selectedPriceLevels.includes(place.price_level)
+                );
+                
+                // 步驟 3: 按評分排序，取前 15 筆
+                const top15 = filteredByPrice
+                    .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+                    .slice(0, 15);
+                
+                // 步驟 4: 對前 15 筆進行詳細資訊查詢（包含營業時間）
+                const detailedResults = await Promise.all(
+                    top15.map(place => getPlaceDetails(place.place_id))
+                );
+                
+                // 步驟 5: 過濾出「120 分鐘後仍營業」的餐廳
+                const openIn120Min = detailedResults.filter(place => 
+                    isOpenIn120Minutes(place)
+                );
+                
+                // 步驟 6: 按評分排序，取前 10 筆
+                const top10 = openIn120Min
+                    .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+                    .slice(0, 10);
+                
+                // 顯示結果
+                hideLoading();
+                displayResults(top10);
+                
+            } catch (error) {
+                hideLoading();
+                showError('搜尋時發生錯誤：' + error.message);
+            }
+        }
+
+        // ============================================
+        // Google Places API 呼叫
+        // ============================================
+        
+        /**
+         * 使用 nearbySearch 搜尋附近餐廳
+         */
+        function searchNearbyRestaurants(location, minRating) {
+            return new Promise((resolve, reject) => {
+                const request = {
+                    location: new google.maps.LatLng(location.lat, location.lng),
+                    radius: 2000, // 2000 公尺
+                    type: 'restaurant'
+                };
+                
+                placesService.nearbySearch(request, (results, status) => {
+                    if (status === google.maps.places.PlacesServiceStatus.OK) {
+                        // 過濾評分
+                        const filtered = results.filter(place => 
+                            place.rating && place.rating >= minRating
+                        );
+                        resolve(filtered);
+                    } else {
+                        reject(new Error('搜尋失敗：' + status));
+                    }
+                });
+            });
+        }
+
+        /**
+         * 取得餐廳詳細資訊（包含營業時間）
+         */
+        function getPlaceDetails(placeId) {
+            return new Promise((resolve, reject) => {
+                const request = {
+                    placeId: placeId,
+                    fields: ['name', 'rating', 'user_ratings_total', 'price_level', 'opening_hours', 'vicinity', 'place_id']
+                };
+                
+                placesService.getDetails(request, (place, status) => {
+                    if (status === google.maps.places.PlacesServiceStatus.OK) {
+                        resolve(place);
+                    } else {
+                        // 如果單一餐廳查詢失敗，返回 null 而非拒絕
+                        resolve(null);
+                    }
+                });
+            });
+        }
+
+        // ============================================
+        // 120 分鐘營業邏輯判斷
+        // ============================================
+        
+        /**
+         * 判斷餐廳在「當前時間 + 120 分鐘」是否營業
+         */
+        function isOpenIn120Minutes(place) {
+            // 如果沒有營業時間資訊，預設為不符合（保守做法）
+            if (!place || !place.opening_hours || !place.opening_hours.periods) {
+                return false;
+            }
+            
+            // 計算目標時間（當前時間 + 120 分鐘）
+            const now = new Date();
+            const targetTime = new Date(now.getTime() + 120 * 60 * 1000);
+            const targetDay = targetTime.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+            const targetMinutes = targetTime.getHours() * 60 + targetTime.getMinutes();
+            
+            // 檢查該時段是否營業
+            const periods = place.opening_hours.periods;
+            
+            for (let period of periods) {
+                const openDay = period.open.day;
+                const openTime = period.open.hours * 60 + period.open.minutes;
+                
+                // 處理 24 小時營業的情況
+                if (!period.close) {
+                    return true;
+                }
+                
+                const closeDay = period.close.day;
+                const closeTime = period.close.hours * 60 + period.close.minutes;
+                
+                // 情況 1: 未跨日（open 和 close 在同一天）
+                if (openDay === closeDay) {
+                    if (targetDay === openDay && targetMinutes >= openTime && targetMinutes < closeTime) {
+                        return true;
+                    }
+                }
+                // 情況 2: 跨日（例如週五 22:00 ~ 週六 02:00）
+                else {
+                    // 檢查是否在開始日期的營業時間內
+                    if (targetDay === openDay && targetMinutes >= openTime) {
+                        return true;
+                    }
+                    // 檢查是否在結束日期的營業時間內
+                    if (targetDay === closeDay && targetMinutes < closeTime) {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
+        }
+
+        // ============================================
+        // UI 更新函式
+        // ============================================
+        
+        /**
+         * 顯示搜尋結果
+         */
+        function displayResults(restaurants) {
+            const resultsContainer = document.getElementById('results');
+            const noResults = document.getElementById('no-results');
+            
+            if (restaurants.length === 0) {
+                noResults.classList.remove('hidden');
+                return;
+            }
+            
+            noResults.classList.add('hidden');
+            
+            restaurants.forEach(restaurant => {
+                const card = createRestaurantCard(restaurant);
+                resultsContainer.appendChild(card);
+            });
+        }
+
+        /**
+         * 建立餐廳卡片
+         */
+        function createRestaurantCard(restaurant) {
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-shadow duration-300';
+            
+            // 價格等級顯示
+            const priceDisplay = '$'.repeat(restaurant.price_level || 1);
+            
+            // 星星評分
+            const stars = generateStars(restaurant.rating || 0);
+            
+            // 營業狀態標籤
+            const statusBadge = '<span class="inline-block px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">✓ 120分鐘內營業</span>';
+            
+            card.innerHTML = `
+                <div class="p-6">
+                    <!-- 店名 -->
+                    <h3 class="text-xl font-bold text-orange-900 mb-2 line-clamp-1">
+                        ${restaurant.name}
+                    </h3>
+                    
+                    <!-- 評分與評論數 -->
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="flex items-center">
+                            ${stars}
+                            <span class="ml-2 text-lg font-semibold text-orange-700">${restaurant.rating || 'N/A'}</span>
+                        </div>
+                        <span class="text-gray-500 text-sm">(${restaurant.user_ratings_total || 0} 則評論)</span>
+                    </div>
+                    
+                    <!-- 價格等級 -->
+                    <div class="mb-3">
+                        <span class="text-orange-600 font-bold text-lg">${priceDisplay}</span>
+                    </div>
+                    
+                    <!-- 地址 -->
+                    <p class="text-gray-600 text-sm mb-4 line-clamp-2">
+                        📍 ${restaurant.vicinity || '地址資訊不可用'}
+                    </p>
+                    
+                    <!-- 營業狀態標籤 -->
+                    <div class="mb-4">
+                        ${statusBadge}
+                    </div>
+                    
+                    <!-- Google Maps 連結 -->
+                    <a 
+                        href="https://www.google.com/maps/place/?q=place_id:${restaurant.place_id}" 
+                        target="_blank" 
+                        class="inline-block w-full text-center px-4 py-2 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors"
+                    >
+                        在 Google Maps 中查看
+                    </a>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        /**
+         * 生成星星評分 HTML
+         */
+        function generateStars(rating) {
+            const fullStars = Math.floor(rating);
+            const hasHalfStar = rating % 1 >= 0.5;
+            let starsHTML = '';
+            
+            for (let i = 0; i < fullStars; i++) {
+                starsHTML += '<span class="star">★</span>';
+            }
+            
+            if (hasHalfStar) {
+                starsHTML += '<span class="star">⯨</span>';
+            }
+            
+            const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+            for (let i = 0; i < emptyStars; i++) {
+                starsHTML += '<span class="text-gray-300">★</span>';
+            }
+            
+            return starsHTML;
+        }
+
+        /**
+         * 顯示 Loading 狀態
+         */
+        function showLoading() {
+            document.getElementById('loading').classList.remove('hidden');
+        }
+
+        /**
+         * 隱藏 Loading 狀態
+         */
+        function hideLoading() {
+            document.getElementById('loading').classList.add('hidden');
+        }
+
+        /**
+         * 顯示錯誤訊息
+         */
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            const errorText = document.getElementById('error-text');
+            errorText.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        /**
+         * 隱藏錯誤訊息
+         */
+        function hideError() {
+            document.getElementById('error-message').classList.add('hidden');
+        }
+
+        /**
+         * 清空搜尋結果
+         */
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('no-results').classList.add('hidden');
+        }
+
+        // ============================================
+        // 頁面載入完成後初始化
+        // ============================================
+        
+        window.addEventListener('load', init);
+    </script>
+
+</body>
+</html>
