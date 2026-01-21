@@ -3,22 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>120 分鐘美味雷達 🍜</title>
+    <title>飢餓時刻 🍜</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Maps API with Places Library -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA-W47DliyOJbMn9NXfFQbzMJ39yVWjz-c&libraries=places"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBrYfdP4HoPDf6dxUN9f-2MesaUBNSv8FQ&libraries=places"></script>
     <style>
+        /* Font Setup */
+        body {
+            font-family: 'Montserrat', sans-serif;
+        }
+        
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+        }
+        
         /* 自訂樣式 - 讓搜尋框與 Google Places Autocomplete 整合更好看 */
         .pac-container {
             border-radius: 0.5rem;
             margin-top: 0.25rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 15px -3px rgba(217, 119, 6, 0.3);
+            background-color: #1f2937;
+            border: 1px solid rgba(251, 191, 36, 0.3);
         }
         
-        /* 星星圖示 */
+        .pac-item {
+            background-color: #1f2937;
+            color: #e5e7eb;
+            border-top: 1px solid rgba(251, 191, 36, 0.1);
+            padding: 8px;
+        }
+        
+        .pac-item:hover {
+            background-color: #374151;
+        }
+        
+        .pac-item-query {
+            color: #fbbf24;
+        }
+        
+        /* 星星圖示 - 金色 */
         .star {
-            color: #f59e0b;
+            color: #fbbf24;
         }
         
         /* Loading 動畫 */
@@ -33,43 +63,130 @@
         html {
             scroll-behavior: smooth;
         }
+        
+        /* Hero Background Overlay */
+        .hero-overlay {
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.75), rgba(17, 24, 39, 0.9));
+        }
+        
+        /* 轉盤動畫 */
+        @keyframes wheelSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(var(--spin-rotation, 1800deg)); }
+        }
+        
+        .wheel-spinning {
+            animation: wheelSpin 2s cubic-bezier(0.33, 0.01, 0.67, 1);
+        }
+        
+        /* 模態框背景 */
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+        }
+        
+        /* 轉盤容器 */
+        .wheel-container {
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 0 60px rgba(217, 119, 6, 0.6);
+            background: #1f2937;
+            border: 3px solid #d97706;
+        }
+        
+        /* SVG 轉盤 */
+        #wheel-svg {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .wheel-text {
+            font-size: 13px;
+            font-weight: bold;
+            fill: white;
+            pointer-events: none;
+            text-anchor: middle;
+            filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.8));
+            writing-mode: vertical-rl;
+            letter-spacing: 2px;
+        }
+        
+        /* 指針 */
+        .wheel-pointer {
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 35px solid #fbbf24;
+            position: absolute;
+            top: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            filter: drop-shadow(0 4px 6px rgba(251, 191, 36, 0.5));
+            z-index: 20;
+        }
+        
+        /* Gold gradient button effect */
+        .btn-gold {
+            background: linear-gradient(135deg, #d97706 0%, #fbbf24 50%, #d97706 100%);
+            background-size: 200% auto;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-gold:hover {
+            background-position: right center;
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+        }
     </style>
 </head>
-<body class="bg-gradient-to-br from-amber-50 to-orange-100 min-h-screen">
+<body class="bg-slate-950 min-h-screen">
     
     <!-- 主容器 -->
     <div class="container mx-auto px-4 py-6 md:py-10 max-w-7xl">
         
-        <!-- 標題區域 -->
-        <header class="text-center mb-8 md:mb-12">
-            <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-orange-600 mb-3">
-                🍜 飢餓食刻
-            </h1>
+        <!-- Hero Banner with Background -->
+        <header class="relative mb-8 md:mb-12 -mx-4 px-4">
+            <!-- Background Image with Dark Overlay -->
+            <div class="relative rounded-2xl overflow-hidden">
+                <!-- Using a dark fine dining themed background with overlay -->
+                <div class="absolute inset-0 bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900"></div>
+                <div class="absolute inset-0 hero-overlay"></div>
+                
+                <!-- Content -->
+                <div class="relative text-center py-16 md:py-24 px-6">
+                    <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold text-amber-400 mb-4 tracking-wide">
+                        飢餓食刻
+                    </h1>
+                   
+                </div>
+            </div>
         </header>
 
         <!-- 搜尋控制區域 -->
-        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-8">
+        <div class="bg-gray-900 rounded-2xl shadow-2xl border border-amber-500/30 p-6 md:p-8 mb-8">
             
             <!-- Mobile: 垂直堆疊 / Desktop: 水平排列 -->
             <div class="flex flex-col md:flex-row md:items-end gap-4 md:gap-6">
                 
                 <!-- 位置搜尋框 -->
                 <div class="flex-1">
-                    <label for="location-input" class="block text-sm font-semibold text-orange-900 mb-2">
+                    <label for="location-input" class="block text-sm font-semibold text-amber-400 mb-2 tracking-wide">
                         📍 請輸入地點
                     </label>
                     <input 
                         type="text" 
                         id="location-input" 
                         placeholder="例如：台北 101" 
-                        class="w-full px-4 py-3 border-2 border-orange-300 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all"
+                        class="w-full px-4 py-3 bg-gray-800 border-2 border-amber-500/50 text-gray-200 placeholder-gray-500 rounded-lg focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/30 transition-all"
                     />
                 </div>
 
                 <!-- 最低評分滑桿 -->
                 <div class="flex-1">
-                    <label for="rating-slider" class="block text-sm font-semibold text-orange-900 mb-2">
-                        ⭐ 最低評分: <span id="rating-value" class="text-orange-600">4.0</span>
+                    <label for="rating-slider" class="block text-sm font-semibold text-amber-400 mb-2 tracking-wide">
+                        ⭐ 最低評分: <span id="rating-value" class="text-amber-300">4.0</span>
                     </label>
                     <input 
                         type="range" 
@@ -78,43 +195,74 @@
                         max="5" 
                         step="0.5" 
                         value="4.0" 
-                        class="w-full h-2 bg-orange-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                        class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
                     />
                 </div>
 
                 <!-- 價格等級選擇 -->
                 <div class="flex-1">
-                    <label class="block text-sm font-semibold text-orange-900 mb-2">
+                    <label class="block text-sm font-semibold text-amber-400 mb-2 tracking-wide">
                         💰 價格等級
                     </label>
                     <div class="flex gap-2">
-                        <button class="price-btn flex-1 px-3 py-2 border-2 border-orange-300 rounded-lg text-orange-800 hover:bg-orange-100 transition-colors" data-price="1">$</button>
-                        <button class="price-btn flex-1 px-3 py-2 border-2 border-orange-300 rounded-lg text-orange-800 hover:bg-orange-100 transition-colors" data-price="2">$$</button>
-                        <button class="price-btn flex-1 px-3 py-2 border-2 border-orange-300 rounded-lg text-orange-800 hover:bg-orange-100 transition-colors" data-price="3">$$$</button>
-                        <button class="price-btn flex-1 px-3 py-2 border-2 border-orange-300 rounded-lg text-orange-800 hover:bg-orange-100 transition-colors" data-price="4">$$$$</button>
+                        <button class="price-btn flex-1 px-3 py-2 border-2 border-amber-500/50 bg-gray-800 rounded-lg text-gray-300 hover:bg-gray-700 hover:border-amber-400 transition-all" data-price="1">$</button>
+                        <button class="price-btn flex-1 px-3 py-2 border-2 border-amber-500/50 bg-gray-800 rounded-lg text-gray-300 hover:bg-gray-700 hover:border-amber-400 transition-all" data-price="2">$$</button>
+                        <button class="price-btn flex-1 px-3 py-2 border-2 border-amber-500/50 bg-gray-800 rounded-lg text-gray-300 hover:bg-gray-700 hover:border-amber-400 transition-all" data-price="3">$$$</button>
+                        <button class="price-btn flex-1 px-3 py-2 border-2 border-amber-500/50 bg-gray-800 rounded-lg text-gray-300 hover:bg-gray-700 hover:border-amber-400 transition-all" data-price="4">$$$$</button>
                     </div>
                 </div>
-
-                <!-- 搜尋按鈕 -->
-                <div class="md:flex-none">
-                    <button 
-                        id="search-btn" 
-                        class="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded-lg shadow-lg hover:from-orange-600 hover:to-red-600 transform hover:scale-105 transition-all duration-200"
-                    >
-                        🔍 搜尋美食
-                    </button>
+            </div>
+            
+            <!-- 餐廳類別選擇 (第二排) -->
+            <div class="mt-4">
+                <label class="block text-sm font-semibold text-amber-400 mb-2 tracking-wide">
+                    🍽️ 餐廳類別
+                </label>
+                <div class="flex flex-wrap gap-2">
+                    <button class="cuisine-btn px-4 py-2 border-2 border-amber-500/50 bg-gray-800 rounded-lg text-gray-300 hover:bg-gray-700 hover:border-amber-400 transition-all" data-cuisine="japanese">🍱 日式</button>
+                    <button class="cuisine-btn px-4 py-2 border-2 border-amber-500/50 bg-gray-800 rounded-lg text-gray-300 hover:bg-gray-700 hover:border-amber-400 transition-all" data-cuisine="italian">🍕 義式</button>
+                    <button class="cuisine-btn px-4 py-2 border-2 border-amber-500/50 bg-gray-800 rounded-lg text-gray-300 hover:bg-gray-700 hover:border-amber-400 transition-all" data-cuisine="korean">🥘 韓式</button>
+                    <button class="cuisine-btn px-4 py-2 border-2 border-amber-500/50 bg-gray-800 rounded-lg text-gray-300 hover:bg-gray-700 hover:border-amber-400 transition-all" data-cuisine="taiwanese">🍜 台式</button>
+                    <button class="cuisine-btn px-4 py-2 border-2 border-amber-500/50 bg-gray-800 rounded-lg text-gray-300 hover:bg-gray-700 hover:border-amber-400 transition-all" data-cuisine="other">🍽️ 其他</button>
                 </div>
             </div>
+
+            <!-- 搜尋與隨便按鈕 -->
+            <div class="mt-4 flex gap-3">
+                <button 
+                    id="search-btn" 
+                    class="flex-1 px-8 py-3 btn-gold text-gray-900 font-bold rounded-lg shadow-lg hover:shadow-amber-500/50 transform hover:scale-105 transition-all duration-200"
+                >
+                    🔍 搜尋美食
+                </button>
+                <button 
+                    id="random-btn" 
+                    class="px-8 py-3 bg-gradient-to-r from-amber-600 to-amber-500 text-gray-900 font-bold rounded-lg shadow-lg hover:from-amber-500 hover:to-amber-400 hover:shadow-amber-500/50 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                    disabled
+                >
+                    🎲 隨便
+                </button>
+            </div>
+        </div>
+
+        <!-- 載入更多按鈕 -->
+        <div id="load-more-container" class="hidden text-center mb-8">
+            <button 
+                id="load-more-btn" 
+                class="px-8 py-3 btn-gold text-gray-900 font-bold rounded-lg shadow-lg hover:shadow-amber-500/50 transition-all"
+            >
+                載入更多餐廳
+            </button>
         </div>
 
         <!-- Loading 狀態 -->
         <div id="loading" class="hidden text-center py-12">
-            <div class="inline-block w-16 h-16 border-4 border-orange-300 border-t-orange-600 rounded-full spinner"></div>
-            <p class="mt-4 text-orange-700 font-semibold">正在搜尋附近的美味餐廳...</p>
+            <div class="inline-block w-16 h-16 border-4 border-gray-700 border-t-amber-500 rounded-full spinner"></div>
+            <p class="mt-4 text-amber-400 font-semibold tracking-wide">正在搜尋附近的美味餐廳...</p>
         </div>
 
         <!-- 錯誤訊息 -->
-        <div id="error-message" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6">
+        <div id="error-message" class="hidden bg-red-900/30 border-l-4 border-red-500 text-red-300 p-4 rounded-lg mb-6 backdrop-blur-sm">
             <p class="font-bold">⚠️ 發生錯誤</p>
             <p id="error-text"></p>
         </div>
@@ -127,8 +275,46 @@
         <!-- 無結果提示 -->
         <div id="no-results" class="hidden text-center py-12">
             <div class="text-6xl mb-4">😢</div>
-            <p class="text-xl text-orange-700 font-semibold">抱歉，找不到符合條件的餐廳</p>
-            <p class="text-orange-600 mt-2">請嘗試調整搜尋條件或更換地點</p>
+            <p class="text-xl text-amber-400 font-semibold">抱歉，找不到符合條件的餐廳</p>
+            <p class="text-gray-400 mt-2">請嘗試調整搜尋條件或更換地點</p>
+        </div>
+    </div>
+
+    <!-- 轉盤模態框 -->
+    <div id="wheel-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+        <div class="bg-gray-900 border border-amber-500/30 rounded-3xl p-8 max-w-2xl mx-4 shadow-2xl">
+            <h2 class="text-3xl font-bold text-amber-400 text-center mb-6 tracking-wide">🎰 幸運轉盤</h2>
+            
+            <!-- 轉盤 -->
+            <div class="flex justify-center mb-6 relative">
+                <div class="wheel-pointer"></div>
+                <div id="wheel" class="wheel-container">
+                    <!-- 餐廳扇形將由 JavaScript 動態生成 -->
+                    <div class="wheel-center">🍜</div>
+                </div>
+            </div>
+            
+            <!-- 結果顯示 -->
+            <div id="wheel-result" class="hidden">
+                <div class="bg-gradient-to-r from-amber-900/40 to-amber-800/40 border border-amber-500/30 rounded-xl p-6 mb-4 backdrop-blur-sm">
+                    <h3 class="text-xl font-bold text-amber-400 mb-2" id="selected-restaurant-name"></h3>
+                    <p class="text-gray-300" id="selected-restaurant-rating"></p>
+                </div>
+                <div class="flex gap-3">
+                    <button 
+                        id="spin-again-btn" 
+                        class="flex-1 px-6 py-3 btn-gold text-gray-900 font-bold rounded-lg hover:shadow-amber-500/50 transition-all"
+                    >
+                        🎲 再轉一次
+                    </button>
+                    <button 
+                        id="close-wheel-btn" 
+                        class="flex-1 px-6 py-3 bg-gray-700 text-gray-200 font-bold rounded-lg hover:bg-gray-600 transition-all"
+                    >
+                        關閉
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -140,18 +326,37 @@
         let autocomplete; // Google Places Autocomplete 實例
         let selectedLocation = null; // 使用者選擇的位置
         let selectedPriceLevels = [1, 2, 3, 4]; // 預設選擇所有價格等級
+        let selectedCuisineTypes = []; // 選擇的餐廳類別
         let map; // Google Map 實例（隱藏，僅用於服務）
         let placesService; // Places Service 實例
+        let allResults = []; // 儲存所有搜尋結果（用於分頁與轉盤）
+        let displayedCount = 0; // 已顯示的餐廳數量
+        let selectedRestaurants = new Set(); // 已被轉盤選過的餐廳 (place_id)
 
         // ============================================
         // 初始化函式
         // ============================================
         
         function init() {
-            // 初始化 Google Places Autocomplete
+            // 初始化 Google Places Autocomplete (限制台灣地區)
             const input = document.getElementById('location-input');
             autocomplete = new google.maps.places.Autocomplete(input, {
-                types: ['geocode', 'establishment']
+                types: ['geocode', 'establishment'],
+                componentRestrictions: { country: 'tw' } // 限制僅搜尋台灣
+            });
+            
+            // 監聽輸入事件，至少 3 個字才啟用 autocomplete
+            let autocompleteEnabled = false;
+            input.addEventListener('input', (e) => {
+                const value = e.target.value;
+                if (value.length >= 3 && !autocompleteEnabled) {
+                    // 啟用 autocomplete
+                    autocompleteEnabled = true;
+                } else if (value.length < 3 && autocompleteEnabled) {
+                    // 禁用 autocomplete (清空選擇)
+                    autocompleteEnabled = false;
+                    selectedLocation = null;
+                }
             });
             
             // 監聽地點選擇事件
@@ -174,10 +379,30 @@
             });
             
             // 預設選中所有價格等級
-            priceBtns.forEach(btn => btn.classList.add('bg-orange-500', 'text-white', 'border-orange-500'));
+            priceBtns.forEach(btn => btn.classList.add('bg-amber-500', 'text-gray-900', 'border-amber-500'));
+            
+            // 綁定餐廳類別按鈕事件
+            const cuisineBtns = document.querySelectorAll('.cuisine-btn');
+            cuisineBtns.forEach(btn => {
+                btn.addEventListener('click', toggleCuisineType);
+            });
+            
+            // 預設選中「其他」類別
+            selectedCuisineTypes = ['other'];
+            document.querySelector('[data-cuisine="other"]').classList.add('bg-amber-500', 'text-gray-900', 'border-amber-500');
             
             // 綁定搜尋按鈕事件
             document.getElementById('search-btn').addEventListener('click', searchRestaurants);
+            
+            // 綁定隨便按鈕事件
+            document.getElementById('random-btn').addEventListener('click', showWheelModal);
+            
+            // 綁定轉盤模態框按鈕
+            document.getElementById('spin-again-btn').addEventListener('click', spinWheel);
+            document.getElementById('close-wheel-btn').addEventListener('click', closeWheelModal);
+            
+            // 綁定載入更多按鈕
+            document.getElementById('load-more-btn').addEventListener('click', loadMoreRestaurants);
         }
 
         // ============================================
@@ -205,16 +430,37 @@
             const btn = e.target;
             const price = parseInt(btn.dataset.price);
             
-            if (btn.classList.contains('bg-orange-500')) {
+            if (btn.classList.contains('bg-amber-500')) {
                 // 取消選擇
-                btn.classList.remove('bg-orange-500', 'text-white', 'border-orange-500');
-                btn.classList.add('border-orange-300', 'text-orange-800');
+                btn.classList.remove('bg-amber-500', 'text-gray-900', 'border-amber-500');
+                btn.classList.add('border-amber-500/50', 'text-gray-300', 'bg-gray-800');
                 selectedPriceLevels = selectedPriceLevels.filter(p => p !== price);
             } else {
                 // 選擇
-                btn.classList.add('bg-orange-500', 'text-white', 'border-orange-500');
-                btn.classList.remove('border-orange-300', 'text-orange-800');
+                btn.classList.add('bg-amber-500', 'text-gray-900', 'border-amber-500');
+                btn.classList.remove('border-amber-500/50', 'text-gray-300', 'bg-gray-800');
                 selectedPriceLevels.push(price);
+            }
+        }
+
+        // ============================================
+        // 餐廳類別切換
+        // ============================================
+        
+        function toggleCuisineType(e) {
+            const btn = e.target;
+            const cuisine = btn.dataset.cuisine;
+            
+            if (btn.classList.contains('bg-amber-500')) {
+                // 取消選擇
+                btn.classList.remove('bg-amber-500', 'text-gray-900', 'border-amber-500');
+                btn.classList.add('border-amber-500/50', 'text-gray-300', 'bg-gray-800');
+                selectedCuisineTypes = selectedCuisineTypes.filter(c => c !== cuisine);
+            } else {
+                // 選擇
+                btn.classList.add('bg-amber-500', 'text-gray-900', 'border-amber-500');
+                btn.classList.remove('border-amber-500/50', 'text-gray-300', 'bg-gray-800');
+                selectedCuisineTypes.push(cuisine);
             }
         }
 
@@ -234,6 +480,11 @@
                 return;
             }
             
+            if (selectedCuisineTypes.length === 0) {
+                showError('請至少選擇一個餐廳類別');
+                return;
+            }
+            
             // 取得最低評分
             const minRating = parseFloat(document.getElementById('rating-slider').value);
             
@@ -242,8 +493,13 @@
             hideError();
             clearResults();
             
+            // 重置狀態
+            allResults = [];
+            displayedCount = 0;
+            selectedRestaurants.clear();
+            
             try {
-                // 步驟 1: 使用 nearbySearch 搜尋餐廳
+                // 步驟 1: 使用 nearbySearch 搜尋餐廳（根據餐廳類別）
                 const nearbyResults = await searchNearbyRestaurants(selectedLocation, minRating);
                 
                 // 步驟 2: 過濾價格等級
@@ -251,29 +507,30 @@
                     !place.price_level || selectedPriceLevels.includes(place.price_level)
                 );
                 
-                // 步驟 3: 按評分排序，取前 15 筆
-                const top15 = filteredByPrice
+                // 步驟 3: 按評分排序，取前 30 筆（準備更多候選）
+                const top30 = filteredByPrice
                     .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-                    .slice(0, 15);
+                    .slice(0, 30);
                 
-                // 步驟 4: 對前 15 筆進行詳細資訊查詢（包含營業時間）
+                // 步驟 4: 對前 30 筆進行詳細資訊查詢（包含營業時間）
                 const detailedResults = await Promise.all(
-                    top15.map(place => getPlaceDetails(place.place_id))
+                    top30.map(place => getPlaceDetails(place.place_id))
                 );
                 
                 // 步驟 5: 過濾出「120 分鐘後仍營業」的餐廳
                 const openIn120Min = detailedResults.filter(place => 
-                    isOpenIn120Minutes(place)
+                    place && isOpenIn120Minutes(place)
                 );
                 
-                // 步驟 6: 按評分排序，取前 10 筆
-                const top10 = openIn120Min
-                    .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-                    .slice(0, 10);
+                // 步驟 6: 按評分排序，儲存所有結果
+                allResults = openIn120Min.sort((a, b) => (b.rating || 0) - (a.rating || 0));
                 
-                // 顯示結果
+                // 步驟 7: 顯示前 15 筆
                 hideLoading();
-                displayResults(top10);
+                displayInitialResults();
+                
+                // 啟用隨便按鈕
+                document.getElementById('random-btn').disabled = allResults.length === 0;
                 
             } catch (error) {
                 hideLoading();
@@ -290,10 +547,23 @@
          */
         function searchNearbyRestaurants(location, minRating) {
             return new Promise((resolve, reject) => {
+                // 根據選擇的餐廳類別建立搜尋關鍵字
+                let keyword = '';
+                if (!selectedCuisineTypes.includes('other')) {
+                    const keywords = {
+                        'japanese': 'japanese sushi ramen',
+                        'italian': 'italian pizza pasta',
+                        'korean': 'korean bbq',
+                        'taiwanese': 'taiwanese 小吃 台菜'
+                    };
+                    keyword = selectedCuisineTypes.map(type => keywords[type] || '').join(' ');
+                }
+                
                 const request = {
                     location: new google.maps.LatLng(location.lat, location.lng),
                     radius: 2000, // 2000 公尺
-                    type: 'restaurant'
+                    type: 'restaurant',
+                    keyword: keyword || undefined
                 };
                 
                 placesService.nearbySearch(request, (results, status) => {
@@ -392,7 +662,63 @@
         // ============================================
         
         /**
-         * 顯示搜尋結果
+         * 顯示初始搜尋結果（前 15 筆）
+         */
+        function displayInitialResults() {
+            const resultsContainer = document.getElementById('results');
+            const noResults = document.getElementById('no-results');
+            const loadMoreContainer = document.getElementById('load-more-container');
+            
+            if (allResults.length === 0) {
+                noResults.classList.remove('hidden');
+                loadMoreContainer.classList.add('hidden');
+                return;
+            }
+            
+            noResults.classList.add('hidden');
+            
+            // 顯示前 15 筆
+            const initialResults = allResults.slice(0, 15);
+            displayedCount = initialResults.length;
+            
+            initialResults.forEach(restaurant => {
+                const card = createRestaurantCard(restaurant);
+                resultsContainer.appendChild(card);
+            });
+            
+            // 顯示或隱藏「載入更多」按鈕
+            if (allResults.length > 15) {
+                loadMoreContainer.classList.remove('hidden');
+            } else {
+                loadMoreContainer.classList.add('hidden');
+            }
+        }
+        
+        /**
+         * 載入更多餐廳（每次 10 筆）
+         */
+        function loadMoreRestaurants() {
+            const resultsContainer = document.getElementById('results');
+            const loadMoreContainer = document.getElementById('load-more-container');
+            
+            // 計算下一批要顯示的餐廳
+            const nextBatch = allResults.slice(displayedCount, displayedCount + 10);
+            
+            nextBatch.forEach(restaurant => {
+                const card = createRestaurantCard(restaurant);
+                resultsContainer.appendChild(card);
+            });
+            
+            displayedCount += nextBatch.length;
+            
+            // 如果沒有更多結果，隱藏按鈕
+            if (displayedCount >= allResults.length) {
+                loadMoreContainer.classList.add('hidden');
+            }
+        }
+        
+        /**
+         * 顯示搜尋結果（舊版，保留以防需要）
          */
         function displayResults(restaurants) {
             const resultsContainer = document.getElementById('results');
@@ -416,7 +742,7 @@
          */
         function createRestaurantCard(restaurant) {
             const card = document.createElement('div');
-            card.className = 'bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-shadow duration-300';
+            card.className = 'bg-gray-800 rounded-xl border border-amber-500/30 shadow-lg overflow-hidden hover:shadow-2xl hover:shadow-amber-500/20 hover:border-amber-500/50 transition-all duration-300';
             
             // 價格等級顯示
             const priceDisplay = '$'.repeat(restaurant.price_level || 1);
@@ -425,12 +751,12 @@
             const stars = generateStars(restaurant.rating || 0);
             
             // 營業狀態標籤
-            const statusBadge = '<span class="inline-block px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">✓ 120分鐘內營業</span>';
+            const statusBadge = '<span class="inline-block px-3 py-1 bg-amber-500/20 border border-amber-500/50 text-amber-400 text-xs font-semibold rounded-full">✓ 120分鐘內營業</span>';
             
             card.innerHTML = `
                 <div class="p-6">
                     <!-- 店名 -->
-                    <h3 class="text-xl font-bold text-orange-900 mb-2 line-clamp-1">
+                    <h3 class="text-xl font-bold text-amber-400 mb-2 line-clamp-1">
                         ${restaurant.name}
                     </h3>
                     
@@ -438,18 +764,18 @@
                     <div class="flex items-center gap-2 mb-3">
                         <div class="flex items-center">
                             ${stars}
-                            <span class="ml-2 text-lg font-semibold text-orange-700">${restaurant.rating || 'N/A'}</span>
+                            <span class="ml-2 text-lg font-semibold text-amber-300">${restaurant.rating || 'N/A'}</span>
                         </div>
-                        <span class="text-gray-500 text-sm">(${restaurant.user_ratings_total || 0} 則評論)</span>
+                        <span class="text-gray-400 text-sm">(${restaurant.user_ratings_total || 0} 則評論)</span>
                     </div>
                     
                     <!-- 價格等級 -->
                     <div class="mb-3">
-                        <span class="text-orange-600 font-bold text-lg">${priceDisplay}</span>
+                        <span class="text-amber-400 font-bold text-lg">${priceDisplay}</span>
                     </div>
                     
                     <!-- 地址 -->
-                    <p class="text-gray-600 text-sm mb-4 line-clamp-2">
+                    <p class="text-gray-300 text-sm mb-4 line-clamp-2">
                         📍 ${restaurant.vicinity || '地址資訊不可用'}
                     </p>
                     
@@ -462,7 +788,7 @@
                     <a 
                         href="https://www.google.com/maps/place/?q=place_id:${restaurant.place_id}" 
                         target="_blank" 
-                        class="inline-block w-full text-center px-4 py-2 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors"
+                        class="inline-block w-full text-center px-4 py-2 btn-gold text-gray-900 font-semibold rounded-lg hover:shadow-amber-500/50 transition-all"
                     >
                         在 Google Maps 中查看
                     </a>
@@ -533,6 +859,285 @@
         function clearResults() {
             document.getElementById('results').innerHTML = '';
             document.getElementById('no-results').classList.add('hidden');
+            document.getElementById('load-more-container').classList.add('hidden');
+        }
+
+        // ============================================
+        // 轉盤功能
+        // ============================================
+        
+        /**
+         * 顯示轉盤模態框
+         */
+        function showWheelModal() {
+            if (allResults.length === 0) {
+                showError('請先搜尋餐廳');
+                return;
+            }
+            
+            // 檢查是否所有餐廳都已被選過
+            if (selectedRestaurants.size >= allResults.length) {
+                // 重新載入新的一批餐廳
+                autoRefreshRestaurants();
+                return;
+            }
+            
+            // 建立轉盤
+            buildWheel();
+            
+            document.getElementById('wheel-modal').classList.remove('hidden');
+            document.getElementById('wheel-result').classList.add('hidden');
+            
+            // 自動開始轉動
+            setTimeout(() => spinWheel(), 500);
+        }
+        
+        /**
+         * 建立轉盤 - 顯示所有可選餐廳
+         */
+        function buildWheel() {
+            const wheel = document.getElementById('wheel');
+            const availableRestaurants = allResults.filter(r => !selectedRestaurants.has(r.place_id));
+            
+            const sliceCount = availableRestaurants.length;
+            const sliceAngle = 360 / sliceCount;
+            
+            // 顏色陣列（金色系）
+            const colors = [
+                '#d97706', '#f59e0b', '#fbbf24', '#b45309',
+                '#ea580c', '#fb923c', '#fdba74', '#c2410c'
+            ];
+            
+            // 創建 SVG
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('id', 'wheel-svg');
+            svg.setAttribute('viewBox', '0 0 400 400');
+            
+            const centerX = 200;
+            const centerY = 200;
+            const radius = 200;
+            
+            availableRestaurants.forEach((restaurant, index) => {
+                const startAngle = (index * sliceAngle - 90) * Math.PI / 180;
+                const endAngle = ((index + 1) * sliceAngle - 90) * Math.PI / 180;
+                
+                // 計算扇形路徑
+                const x1 = centerX + radius * Math.cos(startAngle);
+                const y1 = centerY + radius * Math.sin(startAngle);
+                const x2 = centerX + radius * Math.cos(endAngle);
+                const y2 = centerY + radius * Math.sin(endAngle);
+                
+                const largeArcFlag = sliceAngle > 180 ? 1 : 0;
+                
+                const pathData = `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
+                
+                // 創建扇形
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', pathData);
+                path.setAttribute('fill', colors[index % colors.length]);
+                path.setAttribute('stroke', 'white');
+                path.setAttribute('stroke-width', '2');
+                svg.appendChild(path);
+                
+                // 添加直式文字
+                const midAngle = (startAngle + endAngle) / 2;
+                const textRadius = radius * 0.55; // 調整為 55% 避免與指針重疊
+                const textX = centerX + textRadius * Math.cos(midAngle);
+                const textY = centerY + textRadius * Math.sin(midAngle);
+                
+                // 計算文字旋轉角度（直式文字）
+                const textRotation = (index * sliceAngle + sliceAngle / 2);
+                
+                // 截斷過長的名稱
+                let displayName = restaurant.name;
+                if (displayName.length > 8) {
+                    displayName = displayName.substring(0, 8) + '...';
+                }
+                
+                // 創建文字群組
+                const textGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                textGroup.setAttribute('transform', `translate(${textX}, ${textY}) rotate(${textRotation})`);
+                
+                // 逐字添加（直式排列）
+                const chars = displayName.split('');
+                chars.forEach((char, charIndex) => {
+                    const charText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    charText.setAttribute('x', 0);
+                    charText.setAttribute('y', (charIndex - chars.length / 2) * 16 + 8); // 字間距改為 16px
+                    charText.setAttribute('class', 'wheel-text');
+                    charText.textContent = char;
+                    textGroup.appendChild(charText);
+                });
+                
+                svg.appendChild(textGroup);
+            });
+            
+            // 清空並添加 SVG（不再需要中心圖示）
+            wheel.innerHTML = '';
+            wheel.appendChild(svg);
+        }
+        
+        /**
+         * 關閉轉盤模態框
+         */
+        function closeWheelModal() {
+            document.getElementById('wheel-modal').classList.add('hidden');
+        }
+        
+        /**
+         * 轉動轉盤
+         */
+        function spinWheel() {
+            const wheel = document.getElementById('wheel');
+            const resultDiv = document.getElementById('wheel-result');
+            
+            // 隱藏結果
+            resultDiv.classList.add('hidden');
+            
+            // 過濾出尚未被選過的餐廳
+            const availableRestaurants = allResults.filter(r => !selectedRestaurants.has(r.place_id));
+            
+            if (availableRestaurants.length === 0) {
+                // 所有餐廳都已被選過，自動刷新
+                closeWheelModal();
+                autoRefreshRestaurants();
+                return;
+            }
+            
+            // 隨機選擇一家餐廳
+            const randomIndex = Math.floor(Math.random() * availableRestaurants.length);
+            const selectedRestaurant = availableRestaurants[randomIndex];
+            
+            // 標記為已選擇
+            selectedRestaurants.add(selectedRestaurant.place_id);
+            
+            // 計算旋轉角度
+            // 每個扇形的角度
+            const sliceAngle = 360 / availableRestaurants.length;
+            
+            // 目標扇形的中心角度（順時針，從正上方0度開始）
+            const targetAngle = randomIndex * sliceAngle + (sliceAngle / 2);
+            
+            // 計算需要旋轉的角度：
+            // 1. 指針在正上方 (0度)
+            // 2. 要讓選中的扇形轉到正上方，需要逆時針旋轉 targetAngle
+            // 3. 加上多圈旋轉 (5圈 = 1800度) 讓動畫更有趣
+            const baseRotation = 1800; // 5圈
+            const finalRotation = baseRotation + (360 - targetAngle);
+            
+            // 移除舊的動畫類別
+            wheel.classList.remove('wheel-spinning');
+            wheel.style.transform = 'rotate(0deg)';
+            
+            // 強制重繪
+            void wheel.offsetWidth;
+            
+            // 設定自訂旋轉角度
+            wheel.style.setProperty('--spin-rotation', `${finalRotation}deg`);
+            
+            // 添加動畫類別
+            wheel.classList.add('wheel-spinning');
+            
+            // 2 秒後顯示結果
+            setTimeout(() => {
+                wheel.classList.remove('wheel-spinning');
+                // 保持最終角度
+                wheel.style.transform = `rotate(${finalRotation}deg)`;
+                showWheelResult(selectedRestaurant);
+            }, 2000);
+        }
+        
+        /**
+         * 顯示轉盤結果
+         */
+        function showWheelResult(restaurant) {
+            const resultDiv = document.getElementById('wheel-result');
+            const nameEl = document.getElementById('selected-restaurant-name');
+            const ratingEl = document.getElementById('selected-restaurant-rating');
+            
+            nameEl.textContent = restaurant.name;
+            ratingEl.textContent = `⭐ ${restaurant.rating} (${restaurant.user_ratings_total} 則評論)`;
+            
+            resultDiv.classList.remove('hidden');
+            
+            // 更新再轉一次按鈕狀態
+            const availableCount = allResults.length - selectedRestaurants.size;
+            const spinAgainBtn = document.getElementById('spin-again-btn');
+            
+            if (availableCount === 0) {
+                spinAgainBtn.textContent = '🔄 載入新餐廳';
+            } else {
+                spinAgainBtn.textContent = `🎲 再轉一次 (剩餘 ${availableCount})`;
+            }
+        }
+        
+        /**
+         * 自動刷新餐廳（當所有餐廳都被選過時）
+         */
+        async function autoRefreshRestaurants() {
+            showLoading();
+            closeWheelModal();
+            
+            try {
+                // 使用相同的搜尋條件，但跳過前 N 筆結果
+                const minRating = parseFloat(document.getElementById('rating-slider').value);
+                const nearbyResults = await searchNearbyRestaurants(selectedLocation, minRating);
+                
+                // 過濾價格等級
+                const filteredByPrice = nearbyResults.filter(place => 
+                    !place.price_level || selectedPriceLevels.includes(place.price_level)
+                );
+                
+                // 按評分排序，跳過已顯示的，取新的 30 筆
+                const newCandidates = filteredByPrice
+                    .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+                    .filter(place => !allResults.some(r => r.place_id === place.place_id))
+                    .slice(0, 30);
+                
+                if (newCandidates.length === 0) {
+                    hideLoading();
+                    showError('附近沒有更多符合條件的餐廳了');
+                    return;
+                }
+                
+                // 取得詳細資訊
+                const detailedResults = await Promise.all(
+                    newCandidates.map(place => getPlaceDetails(place.place_id))
+                );
+                
+                // 過濾營業中的餐廳
+                const openIn120Min = detailedResults.filter(place => 
+                    place && isOpenIn120Minutes(place)
+                );
+                
+                // 取前 10 筆新餐廳
+                const newRestaurants = openIn120Min
+                    .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+                    .slice(0, 10);
+                
+                if (newRestaurants.length === 0) {
+                    hideLoading();
+                    showError('附近沒有更多符合條件的餐廳了');
+                    return;
+                }
+                
+                // 替換 allResults
+                allResults = newRestaurants;
+                selectedRestaurants.clear();
+                
+                hideLoading();
+                
+                // 顯示通知
+                setTimeout(() => {
+                    alert(`已載入 ${newRestaurants.length} 間新餐廳！`);
+                    // 重新開始轉盤
+                    showWheelModal();
+                }, 100);
+                
+            } catch (error) {
+                hideLoading();
+                showError('載入新餐廳時發生錯誤：' + error.message);
+            }
         }
 
         // ============================================
